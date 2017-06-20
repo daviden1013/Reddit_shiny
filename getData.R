@@ -1,0 +1,17 @@
+getData = function(file){
+  data = read.csv(paste(file, ".csv", sep = ""), sep = "\t", header = T)
+  names(data) = c("id", "title", "point", "comment", "time", "author", "content")
+  data$title = iconv(as.character(data$title), "latin1", "UTF-8")
+  data$point = as.integer(data$point)
+  data$comment = as.integer(data$comment)
+  data$time = as.integer(data$time)
+  data$author = iconv(as.character(data$author), "latin1", "UTF-8")
+  data$content = iconv(as.character(data$content), "latin1", "UTF-8")
+  
+  return (data)
+}
+
+getDate = function(time){
+  return (paste(substr(time, 1, 4), "-", substr(time, 5, 6), "-", 
+    substr(time, 7, 8), sep = ""))
+}
