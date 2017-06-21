@@ -15,27 +15,7 @@ shinyUI(fluidPage(
       
       fluidRow(
         column(8, selectInput('board', label = h3('Reddit board'),
-                    choices = c('select board' = "none", 
-                      AskReddit = "AskReddit",
-                      CrazyIdeas = "CrazyIdeas",
-                      creepy = "creepy",
-                      FoodPorn = "FoodPorn",
-                      Gaming = "gaming",
-                      IAmA = "IAmA",
-                      LifeProTips = "LPT", 
-                      movies = "movies",
-                      Music = "Music",
-                      news = "news",
-                      nosleep = "nosleep",
-                      pokemon = "pokemon",
-                      politics = "politics",
-                      programming = "programming",
-                      Science = "science",
-                      technology = "technology",
-                      worldnews = "worldnews"
-                  
-    
-                      ), selected = "none")
+                    choices = c(none = 'none'), selected = "none")
         ),
 
         column(4, imageOutput("pic", height = "auto"))

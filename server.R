@@ -13,6 +13,11 @@ source("model.R")
 shinyServer(function(input, output, session) {
   
   output$cover = renderText({"Reddit text mining and visualization tool"})
+  vec = c("none", list.files("./data/"))
+  vec = gsub(".csv", "", vec)
+  names(vec) = vec
+  names(vec)[1] = "select board"
+  updateSelectInput(session, 'board', choices = vec, selected = 'none')
   
   # load data
   observeEvent(input$board, {
