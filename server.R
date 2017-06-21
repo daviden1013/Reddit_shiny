@@ -27,6 +27,7 @@ shinyServer(function(input, output, session) {
         setProgress(message = "Processing...")
         mydata <<- getData(input$board)
         curdata <<- mydata
+
       })
     })
 
@@ -40,43 +41,78 @@ shinyServer(function(input, output, session) {
       checkboxInput('filter', "Filter", value = F)
   })
   
-  # update curdata
+  # update curdata by filter condition
   readCond = function(){
     curdata <<- mydata
     
+    #read keywords
     if(length(input$keyword) !=0 && input$keyword != ""){
       keywordVec = strsplit(input$keyword, ";")[[1]]
       
-      if(input$keywordUnion == "u"){
-        vec = FALSE
-        for(i in 1:length(keywordVec))
-          vec = vec | grepl(keywordVec[i], curdata$title)
-        
-        curdata <<- subset(curdata, vec)
+      if(input$kyCase){
+        if(input$keywordUnion == "u"){
+          vec = FALSE
+          for(i in 1:length(keywordVec))
+            vec = vec | grepl(keywordVec[i], curdata$title)
+          
+          curdata <<- subset(curdata, vec)
+        }
+          else{
+            for(i in 1:length(keywordVec))
+              curdata <<- subset(curdata, grepl(keywordVec[i], title))
+          }
       }
       else{
-        for(i in 1:length(keywordVec))
-          curdata <<- subset(curdata, grepl(keywordVec[i], title))
+        if(input$keywordUnion == "u"){
+          vec = FALSE
+          for(i in 1:length(keywordVec))
+            vec = vec | grepl(tolower(keywordVec[i]), tolower(curdata$title))
+          
+          curdata <<- subset(curdata, vec)
+        }
+        else{
+          for(i in 1:length(keywordVec))
+            curdata <<- subset(curdata, grepl(tolower(keywordVec[i]), tolower(title)))
+        }
       }
+
 
     }
     
+    #read exclude
+    if(length(input$exclude) != 0 && input$exclude != ""){
+      excludeVec = strsplit(input$exclude, ";")[[1]]
+      vec = FALSE
+      if(input$exCase){
+        for(i in 1:length(excludeVec))
+          vec = vec | grepl(excludeVec[i], curdata$title)
+      }
+      else{
+        for(i in 1:length(excludeVec))
+          vec = vec | grepl(tolower(excludeVec[i]), tolower(curdata$title))
+      }
+
+      curdata <<- subset(curdata, !vec)
+    }
+    
+    #read author, date, point, comment
     if(length(input$dates) != 0){
       date = as.integer(gsub("-", "", input$dates, perl = F))
-      curdata <<- subset(curdata, (input$author == "All" | input$author == author) &
+      curdata <<- subset(curdata, (input$author == "" | input$author == author) &
                     (time >= date[1] & time <= date[2]) &
                     (point >= input$point[1] & point <= input$point[2]) & 
                     (comment >= input$comment[1] & comment <= input$comment[2])
                   )
     }
     else
-      curdata <<- subset(curdata, (input$author == "All" | input$author == author))
+      curdata <<- subset(curdata, (input$author == "" | input$author == author))
     
     updateSummary()
   }
   
   # activate readCond
-  observeEvent(c(input$author, input$keyword, input$dates, input$point, input$comment, input$keywordUnion), {
+  observeEvent(c(input$author, input$keyword, input$dates, input$point, input$comment, 
+    input$keywordUnion, input$exclude, input$kyCase, input$exCase), {
     if(first)
       first <<- FALSE
     else
@@ -93,9 +129,12 @@ shinyServer(function(input, output, session) {
       output$dates = renderUI({NULL})
       output$authorUI = renderUI({NULL})
       output$keywordUI = renderUI({NULL})
+      output$excludeUI = renderUI({NULL})
       output$union = renderUI({NULL})
       output$point = renderUI({NULL})
       output$comment = renderUI({NULL})
+      output$keywordCase = renderUI({NULL})
+      output$excludeCase = renderUI({NULL})
     }
 
       
@@ -134,19 +173,41 @@ shinyServer(function(input, output, session) {
   }
   
   updateKeyword = function(){
-    output$authorUI = renderUI({
-      textInput("author", label = "Search author", value = "All")
-    })
-    
-    output$keywordUI = renderUI({
-      textInput("keyword", label = "Search keyword", value = "")
-    })
-    
-    output$union = renderUI({
-      radioButtons('keywordUnion', NULL,
-                   c(Union='u', intersect='i'), selected = 'u', inline = TRUE)
-    })
-    
+    if(length(input$filter) != 0 && input$filter){
+      output$authorUI = renderUI({
+        textInput("author", label = "Search author", value = "")
+      })
+      
+      output$keywordUI = renderUI({
+        textInput("keyword", label = 'Search keywords (use " ; " to separate)', value = "")
+      })
+      
+      output$keywordCase = renderUI({
+        checkboxInput("kyCase", label = 'Case sensitive', value = F)
+      })
+      
+      output$union = renderUI({
+        radioButtons('keywordUnion', NULL,
+                     c(Union='u', intersect='i'), selected = 'u', inline = TRUE)
+      })
+      
+      output$excludeUI = renderUI({
+        textInput("exclude", label = 'Exclude keywords (use " ; " to separate)', value = "")
+      })
+      
+      output$excludeCase = renderUI({
+        checkboxInput("exCase", label = 'Case sensitive', value = F)
+      })
+    }
+    else{
+      output$authorUI = renderUI({NULL})
+      output$keywordUI = renderUI({NULL})
+      output$union = renderUI({NULL})
+      output$excludeUI = renderUI({NULL})
+      output$keywordCase = renderUI({NULL})
+      output$excludeCase = renderUI({NULL})
+    }
+
   }
   
 
@@ -164,6 +225,27 @@ shinyServer(function(input, output, session) {
             boxplot(curdata$point, curdata$comment, names = c("points", "comments"), main = "# of points & comments")
         })
         
+        
+        if(nrow(curdata) >1)
+        output$histogram = renderPlot({
+          if(nrow(curdata) != 0){
+            
+            diff = as.Date(as.character(max(curdata$time)), "%Y%m%d") - 
+              as.Date(as.character(min(curdata$time)), "%Y%m%d")
+            if(diff > 6*30)
+              breaks = "months"
+            else if(diff > 30)
+              breaks = "weeks"
+            else
+              breaks = "days"
+          
+            hist(as.Date(as.character(curdata$time), "%Y%m%d"), breaks = breaks,
+              main = paste("# of posts over time, by", breaks), xlab = "Date", ylab = "", freq = T)
+          }
+        })
+        else
+          output$histogram = renderPlot({NULL})
+        
         if(first)
           output$pic = renderImage({
             filename <- normalizePath(file.path('./www',
@@ -178,7 +260,7 @@ shinyServer(function(input, output, session) {
         
         output$sumAuthor = renderText({
           if(length(input$keyword) != 0)
-           return (paste("Author(s):", ifelse(input$author == "All", "not specified", input$author)))
+           return (paste("Author:", ifelse(input$author == "", "not specified", input$author)))
           else
             return (return ("Author(s): not specified"))
         })
@@ -190,9 +272,16 @@ shinyServer(function(input, output, session) {
             return ("Keyword(s): not specified")
         })
         
+        output$sumExclude = renderText({
+          if(length(input$exclude) != 0)
+            return (paste("Exclude(s):", ifelse(input$exclude == "", "not specified", input$exclude)))
+          else
+            return ("Exclude(s): not specified")
+        })
+        
         output$time = renderText({
           if(length(input$dates) != 0)
-            return (paste("Date range:", input$dates[1], "~", input$dates[2]))
+            return (paste("Date range:\n", input$dates[1], "~", input$dates[2]))
           else
             return ("Date range: not specified")
         })
@@ -220,6 +309,12 @@ shinyServer(function(input, output, session) {
       sliderInput("wordNum", label = "# of topics to cluster", min = 1, 
         max = 10, value = 4)
     
+    else if(input$plot == "authorBar"){
+      max = length(unique(curdata$author))
+      sliderInput("wordNum", label = "# of Authors to plot", min = min(10L, max), 
+        max = max, value = min(10L, max))
+    }
+      
     else
       return (NULL)
       
@@ -233,23 +328,36 @@ shinyServer(function(input, output, session) {
     })
   })
   
+  observeEvent(input$reload, {
+    if(!is.null(mydata)){
+      curdata <<- mydata
+      updateDate()
+      updateKeyword()
+      updateSummary()
+    }
+
+    
+  })
+  
+  
   observeEvent(input$draw, {
 
+    output$removed = renderText({NULL})
     if(is.null(curdata)|| nrow(curdata) ==0)
       return()
     
     isolate({
       withProgress({
         setProgress(message = "Processing...")
-        if(input$removeFreq)
-          out <<- getFig(title = curdata$title, plotType = input$plot, param = input$wordNum, remove = input$freqPercent)
+        if(input$removeFreq){
+          out <<- getFig(curdata, plotType = input$plot, param = input$wordNum, remove = input$freqPercent)
+          output$removed = renderText({paste("Words removed:", paste(out$removed, collapse = ", "), sep = " ")})
+         }
+          
         else
-          out <<- getFig(title = curdata$title, plotType =input$plot, param = input$wordNum)
+          out <<- getFig(curdata, plotType =input$plot, param = input$wordNum)
         
         output$fig = out$figure
-        
-        output$removed = renderText({paste("Words removed:", paste(out$removed, collapse = ", "), sep = " ")})
-        
         updateTabsetPanel(session, "mainTab", "plotTab")
       })
     })
@@ -270,20 +378,5 @@ shinyServer(function(input, output, session) {
     }
   )
   
-  output$savePlot <- downloadHandler(
-    
-    filename = function() {
-      paste(input$board, "/_", input$plot, Sys.Date(), '.png', sep='')
-    },
-    content = function(file) {
-      png(file)
-      out$figure
-      dev.off()
-    }
-  )
-  
-  
-
-
 
 })

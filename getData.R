@@ -1,5 +1,5 @@
 getData = function(file){
-  data = read.csv(paste(file, ".csv", sep = ""), sep = "\t", header = T)
+  data = read.csv(paste("./data/", file, ".csv", sep = ""), sep = "\t", header = T)
   names(data) = c("id", "title", "point", "comment", "time", "author", "content")
   data$title = iconv(as.character(data$title), "latin1", "UTF-8")
   data$point = as.integer(data$point)

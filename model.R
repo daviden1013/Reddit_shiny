@@ -16,10 +16,11 @@ library(topicmodels)
 
 ###############################
 
-getFig = function(title, plotType, param, remove = 0){
+getFig = function(data, plotType, param, remove = 0){
   
   ########pre-processing
   
+  title = data$title
   df <- data.frame(title)
   textdata <- df[df$title, ]
   textdata = gsub("[[:digit:]]", "", textdata)
@@ -59,13 +60,33 @@ getFig = function(title, plotType, param, remove = 0){
   
   if(plotType == "bar"){
     fig = renderPlot({
-      temp = rev(rank(freq$tfidf, ties.method = "first"))
-      sub_freq = subset(freq, temp <= param)
+      sub_freq = data.frame(freq[1:param,])
+      rownames(sub_freq) = rownames(freq)[1:param]
+      names(sub_freq) = names(freq)
       
       p <-ggplot(sub_freq, aes(x = reorder(rownames(sub_freq), tfidf), tfidf))
       p + geom_bar(stat = "identity") + coord_flip() + labs(y = "tf-idf", x = "") + 
-        theme(axis.text=element_text(size=12))
+        theme(axis.text=element_text(size=9))
     })
+  }
+  
+  else if(plotType == "authorBar"){
+    fig = renderPlot({
+      authorTable = data.frame(table(data$author))
+      authorTable = authorTable[order(authorTable$Freq, decreasing = T),]
+      authorTable = authorTable[1:param,]
+      
+      p <-ggplot(authorTable,  aes(x = reorder(Var1, Freq), Freq))
+            
+      if(param <= 100)
+        ySize = element_text(size = 9)
+      else
+        ySize = element_blank()
+      
+      p + geom_bar(stat = "identity") + coord_flip() + labs(y = "# of posts", x = "") + 
+              theme(axis.text.x=element_text(size = 9), axis.text.y=ySize)
+       
+     })
   }
   
   else if(plotType == "tfCloud"){
@@ -125,7 +146,10 @@ getFig = function(title, plotType, param, remove = 0){
       text_word_counts <- tidy_title %>%
         count(post, word, sort = TRUE)
       
-      text_dtm <- text_word_counts %>%
+      text_words <- text_word_counts %>%
+        bind_tf_idf(post, term_col = word, n_col = n)
+      
+      text_dtm <- text_words %>%
           cast_dtm(post, word, n)
       
       lda <- LDA(text_dtm, k = param, control = list(seed = 1234))
@@ -176,6 +200,6 @@ visualize_bigrams <- function(bigrams) {
     ggraph(layout = "fr") +
     geom_edge_link(aes(edge_alpha = n), show.legend = FALSE, arrow = a) +
     geom_node_point(color = "lightblue", size = 5) +
-    geom_node_text(aes(label = name), vjust = 1, hjust = 1) +
+    geom_node_text(aes(label = name), vjust = 1, hjust = 1, size = 6) +
     theme_void()
 }

@@ -16,11 +16,25 @@ shinyUI(fluidPage(
       fluidRow(
         column(8, selectInput('board', label = h3('Reddit board'),
                     choices = c('select board' = "none", 
-                                LifeProTips = "LPT", 
-                                Science = "science",
-                                Gaming = "gaming",
-                                FoodPorn = "FoodPorn",
-                                politics = "politics"
+                      AskReddit = "AskReddit",
+                      CrazyIdeas = "CrazyIdeas",
+                      creepy = "creepy",
+                      FoodPorn = "FoodPorn",
+                      Gaming = "gaming",
+                      IAmA = "IAmA",
+                      LifeProTips = "LPT", 
+                      movies = "movies",
+                      Music = "Music",
+                      news = "news",
+                      nosleep = "nosleep",
+                      pokemon = "pokemon",
+                      politics = "politics",
+                      programming = "programming",
+                      Science = "science",
+                      technology = "technology",
+                      worldnews = "worldnews"
+                  
+    
                       ), selected = "none")
         ),
 
@@ -34,11 +48,21 @@ shinyUI(fluidPage(
               
       tags$hr(),
       fluidRow(
-        column(6, uiOutput("authorUI")
+        column(3, uiOutput("authorUI")
         ),
 
-        column(6,  uiOutput("keywordUI"), 
-          uiOutput("union")
+        column(9,  
+          
+          fluidRow(column(10, uiOutput("keywordUI")), column(2, uiOutput("keywordCase")), inlune = F),
+
+          uiOutput("union"),
+
+          fluidRow(column(10, uiOutput("excludeUI")), column(2, uiOutput("excludeCase")), inlune = F),
+          tags$head(tags$style("#keywordCase, #excludeCase{
+                         font-size: 10px;
+                         }"
+                         )
+          )
         )
       ),
           
@@ -53,9 +77,18 @@ shinyUI(fluidPage(
       #control panel for plots
       ##################################
       selectInput('plot', label = h3('Plot type'),
-        choices = c('Frequent words barplot' = "bar", 'Word cloud (tf)' = "tfCloud", 
-          'Word cloud (tf-idf)' = "tfidfCloud", 'Sentiment word cloud' = "sCloud", 
-          'Bigrams cloud' = "bCloud", 'Topic word Cloud' = "tCloud"), selected = "bar"),
+        choices = list(
+                  'Bar chart' = c(
+                    'Term frequency barchart' = "bar", 
+                    'Author-post barchart' = "authorBar"), 
+                    
+                  'Word cloud' = c(
+                    'Word cloud (tf)' = "tfCloud", 
+                    'Word cloud (tf-idf)' = "tfidfCloud", 
+                    'Sentiment word cloud' = "sCloud", 
+                    'Bigrams cloud' = "bCloud", 
+                    'Topic word cloud' = "tCloud")), selected = "bar"),
+      
       
       checkboxInput("removeFreq", "Remove frequent terms", value = F),
       
@@ -63,9 +96,9 @@ shinyUI(fluidPage(
       
       uiOutput("opt"),
       fluidRow(
-        column(4, downloadButton("saveData", "Data")),
+        column(4, downloadButton("saveData", "Download data")),
         
-        column(4, downloadButton("savePlot", "Plot")),
+        column(4, actionButton("reload", "Reload data", icon("refresh"))),
         
         column(4, actionButton("draw", "Make plot", icon("paper-plane"), 
         style="color: #fff; background-color: #337ab7; border-color: #2e6da4"))
@@ -79,13 +112,14 @@ shinyUI(fluidPage(
         
         tabPanel("Summary", value = 'sumTab',
           fluidRow( 
-            column(6, 
+            column(4, 
 
               textOutput("size"),
               textOutput("sumAuthor"), 
               textOutput("sumKeyword"),
+              textOutput("sumExclude"),
               textOutput("time"),
-              tags$head(tags$style("#size, #sumAuthor, #sumKeyword, #time{
+              tags$head(tags$style("#size, #sumAuthor, #sumKeyword, #sumExclude, #time{
                                  font-size: 30px;
                                  font-family: Arial Rounded MT Bold;
                                  line-height: 200%;
@@ -93,9 +127,13 @@ shinyUI(fluidPage(
                          )
               )
             ),
-            column(6,
+            column(4,
               plotOutput("boxplot")
-            ), inline = F
+            ),
+            
+            column(4,
+              plotOutput("histogram")
+            ),inline = F
           ),
     
           tags$hr(),
