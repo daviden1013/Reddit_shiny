@@ -368,12 +368,14 @@ shinyServer(function(input, output, session) {
       withProgress({
         setProgress(message = "Processing...")
         if(input$removeFreq){
-          out <<- getFig(curdata, plotType = input$plot, param = input$wordNum, remove = input$freqPercent)
+          out <<- getFig(curdata, plotType = input$plot, param = input$wordNum, remove = input$freqPercent, 
+            strsplit(input$removeKeyword, ";")[[1]])
           output$removed = renderText({paste("Words removed:", paste(out$removed, collapse = ", "), sep = " ")})
          }
           
         else
-          out <<- getFig(curdata, plotType =input$plot, param = input$wordNum)
+          out <<- getFig(curdata, plotType =input$plot, param = input$wordNum, 
+            removeKeyword = strsplit(input$removeKeyword, ";")[[1]])
         
         output$fig = out$figure
         updateTabsetPanel(session, "mainTab", "plotTab")

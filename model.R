@@ -16,7 +16,7 @@ library(topicmodels)
 
 ###############################
 
-getFig = function(data, plotType, param, remove = 0){
+getFig = function(data, plotType, param, remove = 0, removeKeyword = c()){
 
   
   ########pre-processing
@@ -41,6 +41,8 @@ getFig = function(data, plotType, param, remove = 0){
   names(textdata) = NULL
   
   textdata = removeWords(textdata, stopwords("english"))
+  if(length(removeKeyword) != 0)
+    textdata = removeWords(textdata, removeKeyword)
   
   corpus = Corpus(VectorSource(textdata))
   if(remove > 0){

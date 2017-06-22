@@ -77,6 +77,8 @@ shinyUI(fluidPage(
       
       uiOutput("removeFreqPercent"),
       
+      textInput("removeKeyword", "Remove keywords from plotting"),
+      
       uiOutput("opt"),
       fluidRow(
         column(4, downloadButton("saveData", "Download data")),
