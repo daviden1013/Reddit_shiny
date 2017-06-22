@@ -69,7 +69,12 @@ shinyUI(fluidPage(
                     'Word cloud (tf-idf)' = "tfidfCloud", 
                     'Sentiment word cloud' = "sCloud", 
                     'Bigrams cloud' = "bCloud", 
-                    'Topic word cloud' = "tCloud")), selected = "bar"
+                    'Topic word cloud' = "tCloud"),
+                  'Table' = c(
+                    'Term dependence' = "termDep"
+                  )
+          
+          ), selected = "bar"
                 ),
       
       
@@ -131,7 +136,15 @@ shinyUI(fluidPage(
           textOutput("removed"),
           
           plotOutput("fig", height = "800px")
+        ),
+        
+        tabPanel("Table", value = 'tableTab',
+
+          tableOutput("termDepTable")
+          
         )
+        
+        
         
       )
       

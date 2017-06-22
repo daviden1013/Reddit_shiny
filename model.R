@@ -1,20 +1,3 @@
-library(plyr)
-library(ggplot2)
-library(wordcloud)
-library(RColorBrewer)
-library(tm)
-library(janeaustenr)
-library(dplyr)
-library(stringr)
-library(stringi)
-library(tidytext)
-library(reshape2)
-library(tidyr)
-library(igraph)
-library(ggraph)
-library(topicmodels)
-
-###############################
 
 getFig = function(data, plotType, param, remove = 0, removeKeyword = c()){
 
@@ -59,7 +42,9 @@ getFig = function(data, plotType, param, remove = 0, removeKeyword = c()){
   colnames(freq) = "tfidf"
   
   ########end processing
-    fig = NULL
+  fig = NULL
+  
+  
   if(plotType == "bar"){
     fig = renderPlot({
       sub_freq = data.frame(freq[1:param,])
@@ -185,6 +170,34 @@ getFig = function(data, plotType, param, remove = 0, removeKeyword = c()){
       top_terms%>%
         acast(term ~ topic, value.var = "beta", fill = 0) %>%
         comparison.cloud(max.words = 100, title.size = 2, scale=c(5,1))
+    })
+  }
+  
+  else if(plotType == "termDep"){
+    fig = renderTable({
+      word_pool = data_frame(Post = 1:length(textdata), text = textdata) %>%
+         unnest_tokens(term, text)
+      
+      word_pool
+      
+      word_cors <- word_pool %>%
+        group_by(term) %>%
+        filter(n() >= 20) %>%
+        pairwise_cor(term, Post, sort = TRUE)
+      
+      word_cors = data.frame(word_cors)
+      
+      if(param == ""){
+        print(1)
+        word_cors[1:10,]
+      }
+        
+      else{
+        print(2)
+        word_cors[word_cors$item1 == param,]
+      }
+        
+      
     })
   }
   

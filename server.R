@@ -316,21 +316,25 @@ shinyServer(function(input, output, session) {
 
     if(input$plot == "tfCloud" || input$plot == "tfidfCloud" || input$plot == "sCloud" 
       || input$plot == "bar" || input$plot == "bigramBar")
-      sliderInput("wordNum", label = "# of words to plot", min = 10, 
+      sliderInput("param", label = "# of words to plot", min = 10, 
         max = 100, value = 20)
       
     else if(input$plot == "bCloud")
-      sliderInput("wordNum", label = "Minimum frequency of word-pairs frequency", min = 1, 
+      sliderInput("param", label = "Minimum frequency of word-pairs frequency", min = 1, 
         max = 100, value = 10)
     
     else if(input$plot == "tCloud")
-      sliderInput("wordNum", label = "# of topics to cluster", min = 1, 
+      sliderInput("param", label = "# of topics to cluster", min = 1, 
         max = 10, value = 4)
     
     else if(input$plot == "authorBar"){
       max = length(unique(curdata$author))
-      sliderInput("wordNum", label = "# of Authors to plot", min = min(10L, max), 
+      sliderInput("param", label = "# of Authors to plot", min = min(10L, max), 
         max = max, value = min(10L, max))
+    }
+    
+    else if(input$plot == "termDep"){
+      textInput("param", label = "Specify a term to search")
     }
       
     else
@@ -361,24 +365,34 @@ shinyServer(function(input, output, session) {
   observeEvent(input$draw, {
 
     output$removed = renderText({NULL})
+    
     if(is.null(curdata)|| nrow(curdata) ==0)
       return()
     
     isolate({
       withProgress({
         setProgress(message = "Processing...")
+
         if(input$removeFreq){
-          out <<- getFig(curdata, plotType = input$plot, param = input$wordNum, remove = input$freqPercent, 
+          out <<- getFig(curdata, plotType = input$plot, param = input$param, remove = input$freqPercent, 
             strsplit(input$removeKeyword, ";")[[1]])
           output$removed = renderText({paste("Words removed:", paste(out$removed, collapse = ", "), sep = " ")})
          }
           
         else
-          out <<- getFig(curdata, plotType =input$plot, param = input$wordNum, 
+          out <<- getFig(curdata, plotType =input$plot, param = input$param, 
             removeKeyword = strsplit(input$removeKeyword, ";")[[1]])
         
-        output$fig = out$figure
-        updateTabsetPanel(session, "mainTab", "plotTab")
+        if(input$plot == "termDep"){
+          output$termDepTable = out$figure
+          updateTabsetPanel(session, "mainTab", "tableTab")
+        }
+          
+        else{
+          output$fig = out$figure
+          updateTabsetPanel(session, "mainTab", "plotTab")
+        }
+
       })
     })
     
