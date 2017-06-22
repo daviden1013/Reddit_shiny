@@ -17,6 +17,7 @@ library(topicmodels)
 ###############################
 
 getFig = function(data, plotType, param, remove = 0){
+
   
   ########pre-processing
   
@@ -56,8 +57,7 @@ getFig = function(data, plotType, param, remove = 0){
   colnames(freq) = "tfidf"
   
   ########end processing
-  fig = NULL
-  
+    fig = NULL
   if(plotType == "bar"){
     fig = renderPlot({
       sub_freq = data.frame(freq[1:param,])
@@ -69,7 +69,6 @@ getFig = function(data, plotType, param, remove = 0){
         theme(axis.text=element_text(size=9))
     })
   }
-  
   else if(plotType == "authorBar"){
     fig = renderPlot({
       authorTable = data.frame(table(data$author))
@@ -87,17 +86,37 @@ getFig = function(data, plotType, param, remove = 0){
               theme(axis.text.x=element_text(size = 9), axis.text.y=ySize)
        
      })
+    
+  }
+
+  else if(plotType == "bigramBar"){
+    fig = renderPlot({
+      title_frame <- data_frame(sourse = rep("Board", length(textdata)), text = textdata)
+      title_bigrams <- title_frame %>%
+        count_bigrams()
+      
+      pairs = data.frame(cbind(paste(title_bigrams$word1, "->", title_bigrams$word2), title_bigrams$n))
+      names(pairs) = c("term", "n")
+      pairs$term = as.character(pairs$term)
+      pairs$n = as.integer(as.character(pairs$n))
+      sub_pairs = pairs[1:param,]
+      
+      p <-ggplot(sub_pairs, aes(x = reorder(term, n), n))
+      p + geom_bar(stat = "identity") + coord_flip() + labs(y = "# of occurance", x = "") +
+        theme(axis.text.x=element_text(size=9), axis.text.y=element_text(size = 9))
+
+    })
   }
   
   else if(plotType == "tfCloud"){
     fig = renderPlot({
-      wordcloud(corpus, max.words = param, colors=brewer.pal(1, "Dark2"))
+      wordcloud(corpus, max.words = param, colors=brewer.pal(1, "Dark2"), scale = c(5, 1))
     })
   }
   
   else if(plotType == "tfidfCloud"){
     fig = renderPlot({
-      wordcloud(rownames(freq), freq[,1], max.words = param, colors=brewer.pal(1, "Dark2"))
+      wordcloud(rownames(freq), freq[,1], max.words = param, colors=brewer.pal(1, "Dark2"), scale = c(5, 1))
     })
   }
   

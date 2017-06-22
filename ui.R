@@ -60,14 +60,17 @@ shinyUI(fluidPage(
         choices = list(
                   'Bar chart' = c(
                     'Term frequency barchart' = "bar", 
-                    'Author-post barchart' = "authorBar"), 
+                    'Author-post barchart' = "authorBar", 
+                    'Bigrams barchart' = "bigramBar"
+                  ),
                     
                   'Word cloud' = c(
                     'Word cloud (tf)' = "tfCloud", 
                     'Word cloud (tf-idf)' = "tfidfCloud", 
                     'Sentiment word cloud' = "sCloud", 
                     'Bigrams cloud' = "bCloud", 
-                    'Topic word cloud' = "tCloud")), selected = "bar"),
+                    'Topic word cloud' = "tCloud")), selected = "bar"
+                ),
       
       
       checkboxInput("removeFreq", "Remove frequent terms", value = F),
@@ -91,21 +94,22 @@ shinyUI(fluidPage(
       tabsetPanel(id = 'mainTab', 
         
         tabPanel("Summary", value = 'sumTab',
+          textOutput("size"),
+          textOutput("sumAuthor"), 
+          textOutput("sumKeyword"),
+          textOutput("sumExclude"),
+          textOutput("time"),
+          tags$head(tags$style("#size, #sumAuthor, #sumKeyword, #sumExclude, #time{
+                             font-size: 30px;
+                             font-family: Arial Rounded MT Bold;
+                             line-height: 120%;
+                             }"
+                     )
+          ),
+          
           fluidRow( 
             column(4, 
-
-              textOutput("size"),
-              textOutput("sumAuthor"), 
-              textOutput("sumKeyword"),
-              textOutput("sumExclude"),
-              textOutput("time"),
-              tags$head(tags$style("#size, #sumAuthor, #sumKeyword, #sumExclude, #time{
-                                 font-size: 30px;
-                                 font-family: Arial Rounded MT Bold;
-                                 line-height: 200%;
-                                 }"
-                         )
-              )
+              tableOutput("sumTable")
             ),
             column(4,
               plotOutput("boxplot")
@@ -113,7 +117,7 @@ shinyUI(fluidPage(
             
             column(4,
               plotOutput("histogram")
-            ),inline = F
+            ),inline = T
           ),
     
           tags$hr(),

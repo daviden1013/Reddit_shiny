@@ -118,6 +118,7 @@ shinyServer(function(input, output, session) {
   # activate readCond
   observeEvent(c(input$author, input$keyword, input$dates, input$point, input$comment, 
     input$keywordUnion, input$exclude, input$kyCase, input$exCase), {
+
     if(first)
       first <<- FALSE
     else
@@ -164,7 +165,7 @@ shinyServer(function(input, output, session) {
         max = max(curdata$point)
         
         sliderInput("point", label = " Points", min = min, 
-            max = max, value = c(min, max))
+            max = max, value = c(min, max), step = 10)
       })
     
       output$comment = renderUI({
@@ -172,7 +173,7 @@ shinyServer(function(input, output, session) {
         max = max(curdata$comment)
         
         sliderInput("comment", label = " # of comments", min = min, 
-            max = max, value = c(min, max))
+            max = max, value = c(min, max), step = 10)
       })
     
   }
@@ -225,15 +226,26 @@ shinyServer(function(input, output, session) {
             curdata[1:min(10, nrow(curdata)),c(-1,-7)]
         })
         
+        output$sumTable = renderTable({
+          if(nrow(curdata) != 0){
+            p = data.frame(unclass(summary(curdata$point)), check.names = FALSE, stringsAsFactors = FALSE)
+            c = data.frame(unclass(summary(curdata$comment)), check.names = FALSE, stringsAsFactors = FALSE)
+            names(p) = "points"
+            names(c) = "comments"
+            cbind(p, c)
+          }
+        }, spacing = 'l', rownames = T)
+        
         output$boxplot = renderPlot({
           if(nrow(curdata) != 0)
-            boxplot(curdata$point, curdata$comment, names = c("points", "comments"), main = "# of points & comments")
+          boxplot(curdata$point, curdata$comment, names = c("points", "comments"), outline = F,
+            main = "# of points & comments")
         })
         
         
-        if(nrow(curdata) >1)
+        if(nrow(curdata) > 1)
         output$histogram = renderPlot({
-          if(nrow(curdata) != 0){
+          
             
             diff = as.Date(as.character(max(curdata$time)), "%Y%m%d") - 
               as.Date(as.character(min(curdata$time)), "%Y%m%d")
@@ -246,7 +258,7 @@ shinyServer(function(input, output, session) {
           
             hist(as.Date(as.character(curdata$time), "%Y%m%d"), breaks = breaks,
               main = paste("# of posts over time, by", breaks), xlab = "Date", ylab = "", freq = T)
-          }
+          
         })
         else
           output$histogram = renderPlot({NULL})
@@ -302,7 +314,8 @@ shinyServer(function(input, output, session) {
     
   output$opt = renderUI({
 
-    if(input$plot == "tfCloud" || input$plot == "tfidfCloud" || input$plot == "sCloud" || input$plot == "bar" )
+    if(input$plot == "tfCloud" || input$plot == "tfidfCloud" || input$plot == "sCloud" 
+      || input$plot == "bar" || input$plot == "bigramBar")
       sliderInput("wordNum", label = "# of words to plot", min = 10, 
         max = 100, value = 20)
       
