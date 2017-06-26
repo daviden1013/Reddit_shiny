@@ -50,10 +50,11 @@ getFig = function(data, plotType, param, remove = 0, removeKeyword = c()){
       sub_freq = data.frame(freq[1:param,])
       rownames(sub_freq) = rownames(freq)[1:param]
       names(sub_freq) = names(freq)
+      textSize = ifelse(param <=50, 12, 9)
       
       p <-ggplot(sub_freq, aes(x = reorder(rownames(sub_freq), tfidf), tfidf))
       p + geom_bar(stat = "identity") + coord_flip() + labs(y = "tf-idf", x = "") + 
-        theme(axis.text=element_text(size=9))
+        theme(axis.text=element_text(size=textSize))
     })
   }
   else if(plotType == "authorBar"){
@@ -64,7 +65,9 @@ getFig = function(data, plotType, param, remove = 0, removeKeyword = c()){
       
       p <-ggplot(authorTable,  aes(x = reorder(Var1, Freq), Freq))
             
-      if(param <= 100)
+      if(param <= 50)
+        ySize = element_text(size = 12)
+      else if(param <= 100)
         ySize = element_text(size = 9)
       else
         ySize = element_blank()
@@ -88,9 +91,11 @@ getFig = function(data, plotType, param, remove = 0, removeKeyword = c()){
       pairs$n = as.integer(as.character(pairs$n))
       sub_pairs = pairs[1:param,]
       
+      textSize = ifelse(param <=50, 12, 9)
+      
       p <-ggplot(sub_pairs, aes(x = reorder(term, n), n))
       p + geom_bar(stat = "identity") + coord_flip() + labs(y = "# of occurance", x = "") +
-        theme(axis.text.x=element_text(size=9), axis.text.y=element_text(size = 9))
+        theme(axis.text.x=element_text(size=9), axis.text.y=element_text(size = textSize))
 
     })
   }

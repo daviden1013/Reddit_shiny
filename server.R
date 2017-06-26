@@ -148,35 +148,36 @@ shinyServer(function(input, output, session) {
   })
   
   updateDate = function(){
-    output$dates = renderUI({
 
-      if(nrow(curdata)==0 || length(input$filter) == 0||!(input$filter))
-        return ()
-      start = getDate(as.character(min(curdata$time)))
-      end = getDate(as.character(max(curdata$time)))
-      
-      dateRangeInput("dates", label = "Date range", start = start, end = end,
-        min = getDate(as.character(min(mydata$time))), max = getDate(as.character(max(mydata$time))))
-      
-    })
-    
+      output$dates = renderUI({
 
-      output$point = renderUI({
-        min = min(curdata$point)
-        max = max(curdata$point)
+        if(nrow(curdata)==0 || length(input$filter) == 0||!(input$filter))
+          return ()
+        start = getDate(as.character(min(curdata$time)))
+        end = getDate(as.character(max(curdata$time)))
         
-        sliderInput("point", label = " Points", min = min, 
-            max = max, value = c(min, max), step = 10)
+        dateRangeInput("dates", label = "Date range", start = start, end = end,
+          min = getDate(as.character(min(mydata$time))), max = getDate(as.character(max(mydata$time))))
+        
       })
     
-      output$comment = renderUI({
-        min = min(curdata$comment)
-        max = max(curdata$comment)
-        
-        sliderInput("comment", label = " # of comments", min = min, 
-            max = max, value = c(min, max), step = 10)
-      })
-    
+      if( length(input$filter) != 0&& input$filter){
+        output$point = renderUI({
+          min = min(curdata$point)
+          max = max(curdata$point)
+          
+          sliderInput("point", label = " Points", min = min, 
+              max = max, value = c(min, max), step = 10)
+        })
+      
+        output$comment = renderUI({
+          min = min(curdata$comment)
+          max = max(curdata$comment)
+          
+          sliderInput("comment", label = " # of comments", min = min, 
+              max = max, value = c(min, max), step = 10)
+        })
+      }
   }
   
   updateKeyword = function(){
@@ -331,7 +332,7 @@ shinyServer(function(input, output, session) {
     else if(input$plot == "authorBar"){
       max = length(unique(curdata$author))
       sliderInput("param", label = "# of Authors to plot", min = min(10L, max), 
-        max = max, value = min(10L, max))
+        max = max, value = min(10L, max), step = 10)
     }
     
     else if(input$plot == "termDep"){

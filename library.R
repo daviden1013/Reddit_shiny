@@ -51,5 +51,7 @@ library(igraph)
 library(ggraph)
 library(topicmodels)
 library(devtools)
-install_github("dgrtwo/widyr")
+
+if(!require(widyr))
+  install_github("dgrtwo/widyr")
 library(widyr)

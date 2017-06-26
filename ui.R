@@ -71,7 +71,7 @@ shinyUI(fluidPage(
                     'Bigrams cloud' = "bCloud", 
                     'Topic word cloud' = "tCloud"),
                   'Table' = c(
-                    'Term dependence' = "termDep"
+                    'Word pairwise correlation' = "termDep"
                   )
           
           ), selected = "bar"
